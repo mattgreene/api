@@ -80,8 +80,7 @@ class CopperEnterpriseClient():
 
     def _make_next_url(self, endpoint, limit=DEFAULT_QUERY_LIMIT):
         limit_str = "?limit={}".format(limit) if limit != DEFAULT_QUERY_LIMIT else ""
-        return "{url}/partner/{id}/{endpoint}{limit_str}".format(
-            url=CopperCloudClient.API_URL,
+        return "partner/{id}/{endpoint}{limit_str}".format(
             id=self.args.enterprise_id,
             endpoint=endpoint,
             limit_str=limit_str,
@@ -95,8 +94,7 @@ class CopperEnterpriseClient():
             query_params["limit"] = limit
         if with_history != DEFAULT_WITH_HISTORY:
             query_params["with_history"] = with_history
-        return "{url}/partner/{id}/{endpoint}{qstr}".format(
-            url=CopperCloudClient.API_URL,
+        return "partner/{id}/{endpoint}{qstr}".format(
             id=self.args.enterprise_id,
             endpoint=endpoint,
             qstr="?{}".format(urlencode(query_params)) if len(list(query_params)) else ""
@@ -121,9 +119,7 @@ class CopperEnterpriseClient():
                 elements += resp["results"]
                 more_elements = resp.get("next", None)
                 if more_elements:
-                    next_url = "{url}{uri}".format(
-                        url=CopperCloudClient.BASE_API_URL, uri=resp["next"]
-                    )
+                    next_url = resp["next"]
         except Exception as err:
             print ("\nGET error:\n" + pformat(err))
         return elements
@@ -154,8 +150,7 @@ class CopperEnterpriseClient():
         if timezone:
             location = {"timezone": timezone}
         else:
-            url = "{url}/partner/{eid}/meter/{mid}/location".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/location".format(
                 mid=meter_id,
                 eid=self.args.enterprise_id,
             )
@@ -180,8 +175,7 @@ class CopperEnterpriseClient():
                 if self.args.debug:
                     print("skipping meter {} which does not exist on {}".format(meter_id, d))
                 continue
-            url = "{url}/partner/{eid}/meter/{mid}/usage?{qstr}".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/usage?{qstr}".format(
                 eid=self.args.enterprise_id,
                 mid=meter_id,
                 qstr=urlencode(
@@ -220,8 +214,7 @@ class CopperEnterpriseClient():
         if timezone:
             location = {"timezone": timezone}
         else:
-            url = "{url}/partner/{eid}/meter/{mid}/location".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/location".format(
                 mid=meter['id'],
                 eid=self.args.enterprise_id,
             )
@@ -246,8 +239,7 @@ class CopperEnterpriseClient():
                 if self.args.debug:
                     print("skipping meter {} which does not exist on {}".format(meter['id'], d))
                 continue
-            url = "{url}/partner/{eid}/meter/{mid}/{endpoint}?{qstr}".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/{endpoint}?{qstr}".format(
                 eid=self.args.enterprise_id,
                 mid=meter['id'],
                 endpoint=endpoint,
@@ -290,8 +282,7 @@ class CopperEnterpriseClient():
         if getattr(self.args, "timezone", None):
             location = {"timezone": self.args.timezone}
         else:
-            url = "{url}/partner/{eid}/meter/{mid}/location".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/location".format(
                 mid=meter_id,
                 eid=self.args.enterprise_id,
             )
@@ -310,8 +301,7 @@ class CopperEnterpriseClient():
                 if self.args.debug:
                     print("skipping meter {} which does not exist on {}".format(meter_id, d))
                 continue
-            url = "{url}/partner/{eid}/meter/{mid}/readings?{qstr}".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/meter/{mid}/readings?{qstr}".format(
                 eid=self.args.enterprise_id,
                 mid=meter_id,
                 qstr=urlencode({
@@ -466,8 +456,7 @@ class CopperEnterpriseClient():
         query_params = {}
         if self.args.with_users or self.args.incomplete:
             query_params["with_users"] = True
-        url =  "{url}/partner/{id}/premise{qstr}".format(
-            url=CopperCloudClient.API_URL,
+        url =  "partner/{id}/premise{qstr}".format(
             id=self.args.enterprise_id,
             qstr="?{}".format(urlencode(query_params)) if len(list(query_params)) else ""
         )
@@ -524,8 +513,7 @@ class CopperEnterpriseClient():
             "Last Heard",
             "Firmware Version",
         ]
-        url =  "{url}/partner/{id}/gateway".format(
-            url=CopperCloudClient.API_URL,
+        url =  "partner/{id}/gateway".format(
             id=self.args.enterprise_id,
         )
         gateways = self.cloud_client.get_helper(url)
@@ -694,8 +682,7 @@ class CopperEnterpriseClient():
                 query_params["premise_id"] = premise_id
             if gateway_id != None:
                 query_params["gateway_id"] = gateway_id
-            url = "{url}/partner/{eid}/grid/readings?{qstr}".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/grid/readings?{qstr}".format(
                 eid=self.args.enterprise_id,
                 qstr=urlencode(query_params)
             )
@@ -798,8 +785,8 @@ class CopperEnterpriseClient():
                 break
             num -= 1
             self.tick()
-            url = "{url}/partner/{eid}/meter/{mid}/location".format(
-                url=CopperCloudClient.API_URL, mid=meter["meter_id"],
+            url = "partner/{eid}/meter/{mid}/location".format(
+                mid=meter["meter_id"],
                 eid=self.args.enterprise_id,
             )
             location = self.cloud_client.get_helper(url)
@@ -1019,8 +1006,7 @@ class CopperEnterpriseClient():
                     )
                     sum_usage += usage.get("sum_usage", 0) if usage else 0
                 rows.append(["{} cumulative per-meter usage".format(meter_type), round(sum_usage, 2), CopperEnterpriseClient.METER_TYPE_UOM[meter_type], "2"])
-            url = "{url}/partner/{eid}/aggregate/usage?{qstr}".format(
-                url=CopperCloudClient.API_URL,
+            url = "partner/{eid}/aggregate/usage?{qstr}".format(
                 eid=self.args.enterprise_id,
                 qstr=urlencode(
                     {
@@ -1106,6 +1092,9 @@ class CopperEnterpriseClient():
             default=os.environ["COPPER_ENTERPRISE_ID"],
             help="Enterprise ID (filter premises belonging to enterprise)"
         )
+        parser.add_argument(
+            '--cloud', dest='cloud', default='production',
+            help='Interact with staging or production APIs.')
 
         subparser = parser.add_subparsers()
 

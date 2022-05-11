@@ -35,11 +35,13 @@ class CopperCloudClient():
     CLIENT_ID = os.environ['COPPER_CLIENT_ID']
     CLIENT_SECRET = os.environ['COPPER_CLIENT_SECRET']
     BASE_AUTH_URL = 'https://auth.copperlabs.com'
-    BASE_API_URL = 'https://api.copperlabs.com'
-    API_URL = '{api_host}/api/v2'.format(api_host=BASE_API_URL)
+    PROD_API_URL = 'https://api.copperlabs.com'
+    STAG_API_URL = 'https://api-staging.copperlabs.com'
 
     def __init__(self, args, test_url):
         self.args = args
+        cloud = getattr(self.args, 'cloud', 'production')
+        self.set_api_url(cloud)
         self.token_data = {}
         # use cache if it exists
         if os.path.isfile(CopperCloudClient.CACHEFILE):
@@ -68,7 +70,7 @@ class CopperCloudClient():
         data = {'grant_type': 'client_credentials',
                 'client_id': CopperCloudClient.CLIENT_ID,
                 'client_secret': CopperCloudClient.CLIENT_SECRET,
-                'audience': CopperCloudClient.BASE_API_URL}
+                'audience': CopperCloudClient.PROD_API_URL}
         r = requests.post(url=url, headers=headers, json=data)
         self.__handle_response(r)
         self.token_data = r.json()
@@ -91,13 +93,23 @@ class CopperCloudClient():
             qstr=urlencode(params)) if len(params.keys()) else ''
         return qstr
 
+    def set_api_url(self, cloud):
+        self.api_url = '{}/api/v2'.format((CopperCloudClient.PROD_API_URL if cloud == 'production' else CopperCloudClient.STAG_API_URL))
+
     def build_request_headers(self):
         return {'content-type': 'application/json',
                 'Authorization': '{token_type} {access_token}'.format(
                     token_type=self.token_data['token_type'],
                     access_token=self.token_data['access_token'])}
 
-    def get_helper(self, url):
+    def build_request_url(self, url_frag):
+        url = url_frag
+        if not url.startswith('https://'):
+            url = '{}/{}'.format(self.api_url, url_frag)
+        return url
+
+    def get_helper(self, uri):
+        url = self.build_request_url(uri)
         try:
             r = requests.get(url, headers=self.build_request_headers())
             self.__handle_response(r)
@@ -122,7 +134,8 @@ class CopperCloudClient():
                 print(dump.dump_all(r).decode('utf-8') + '\n\n')
                 raise Exception(r)
 
-    def post_helper(self, url, data):
+    def post_helper(self, uri, data):
+        url = self.build_request_url(uri)
         try:
             r = requests.post(url, headers=self.build_request_headers(), json=data)
             self.__handle_response(r)
