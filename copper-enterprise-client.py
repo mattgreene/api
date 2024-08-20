@@ -458,8 +458,11 @@ class CopperEnterpriseClient():
             "County",
             "State",
             "Tags",
-            "Email",
         ]
+        if self.args.with_users:
+          header.append("Email")
+        if self.args.with_user_ids:
+          header.append("User_ID")
         query_params = {}
         if self.args.with_users or self.args.incomplete:
             query_params["with_users"] = True
@@ -482,6 +485,7 @@ class CopperEnterpriseClient():
         )
         for p in prems:
             emails = ";".join([u.get("email", "missing") for u in p.get("user_list", [])]) 
+            user_ids = ";".join([u.get("user_id", "missing") for u in p.get("user_list", [])]) 
             if self.args.incomplete:
                 url =  "{url}/partner/{id}/meter?premise_id={pid}".format(
                     url=CopperCloudClient.API_URL,
@@ -491,7 +495,7 @@ class CopperEnterpriseClient():
                 prem_meters = [meter for meter in meters if meter["premise_id"] == p["id"]]
                 if len(prem_meters) or p["name"].startswith("Cube:") or "ma.baseline@gmail.com" in emails:
                     continue
-            rows.append([
+            row = [
                 p["id"],
                 p["created_at"],
                 p["street_address"],
@@ -500,9 +504,13 @@ class CopperEnterpriseClient():
                 p["postal_code"],
                 p["county_district"],
                 p["state_region"],
-                list(set(p["tags"])),
-                emails,
-            ])
+                list(set(p["tags"]))
+            ]
+            if self.args.with_users:
+              row.append(emails)
+            if self.args.with_user_ids:
+              row.append(user_ids)
+            rows.append(row)
         dtypes = ["a"] * len(header)
         return title, header, rows, dtypes
 
@@ -1255,6 +1263,13 @@ class CopperEnterpriseClient():
             action="store_true",
             default=False,
             help="Include user emails in report",
+        )
+        parser_prem.add_argument(
+            "--with-user-ids",
+            dest="with_user_ids",
+            action="store_true",
+            default=False,
+            help="Include user IDs in report",
         )
         parser_prem.add_argument(
             "--incomplete",
