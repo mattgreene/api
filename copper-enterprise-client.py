@@ -600,6 +600,8 @@ class CopperEnterpriseClient():
         for meter in meters:
             if self.args.meter_id and meter["id"] != self.args.meter_id:
                 continue
+            if self.args.meter_type and meter["type"] != self.args.meter_type:
+                continue
             created_utc = parser.parse(meter["created_at"])
             created_local = created_utc.astimezone(pytz.timezone(self.args.timezone)).replace(tzinfo=None)
             rows.append([
@@ -1167,6 +1169,11 @@ class CopperEnterpriseClient():
             action="store_true",
             default=False,
             help="Capture only the latest reading between start and end",
+        )
+        parser_meter_readings.add_argument(
+            "--meter-type",
+            dest="meter_type",
+            help="Type of meter to dump",
         )
         parser_meter_readings.add_argument("start", help="Query start date, formatted as: " + CopperEnterpriseClient.HELP_DATE_FMT)
         parser_meter_readings.add_argument("end", help="Query end date, formatted as: " + CopperEnterpriseClient.HELP_DATE_FMT)
