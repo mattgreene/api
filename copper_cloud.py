@@ -1,4 +1,4 @@
-#  Copyright 2019-2021 Copper Labs, Inc.
+#  Copyright 2019-2025 Copper Labs, Inc.
 #
 #  copper_cloud.py
 #
@@ -103,9 +103,12 @@ class CopperCloudClient():
                     access_token=self.token_data['access_token'])}
 
     def build_request_url(self, url_frag):
-        url = url_frag
+        url = url_frag.replace('api/v2/', '')
+        if url.startswith('/'):
+            url = url[1:]
         if not url.startswith('https://'):
-            url = '{}/{}'.format(self.api_url, url_frag)
+            url = '{}/{}'.format(self.api_url, url)
+        #print('build_request_url: {} {}'.format(url_frag, url))
         return url
 
     def get_helper(self, uri):
